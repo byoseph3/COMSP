@@ -100,15 +100,15 @@ def generate_general_report(conn, report):
             full_user_info = f"{users}/{reason}"
         else:
             full_user_info = users
-        if value == 'IP Live':
+        if value == 'IP1':
             ip1_arr.append(full_user_info)
-        elif value == 'ON Live':
+        elif value == 'ON1':
             on1_arr.append(full_user_info)
-        elif value == 'IP Makeup':
+        elif value == 'IP3':
             ip3_arr.append(full_user_info)
-        elif value == 'ON Makeup':
+        elif value == 'ON2':
             on2_arr.append(full_user_info)
-        elif value == 'Absent':
+        elif value == 'ABS':
             abs_arr.append(full_user_info)
         else:
             pending_arr.append(full_user_info)
