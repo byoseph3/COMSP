@@ -79,3 +79,28 @@ def make_connection_params(env):
 
     return params
 
+def get_report_data(conn, report):
+    with conn.cursor() as cur:
+        cur.execute(sql.SQL('SELECT users, small_group, role, is_joonjin, {report} FROM users').format(report=sql.Identifier(report)))
+        return cur.fetchall()
+    #     columns = [desc[0] for desc in cur.description]
+    #     rows = cur.fetchall()
+    # return columns, rows
+
+def generate_general_report(conn, report):
+    data = get_report_data(conn, report)
+    return data
+
+def main():
+    env = load_env()
+    conn_params = make_connection_params(env)
+    with psycopg2.connect(**conn_params) as conn:
+        report = reports[0]
+        print(f"Generating report: {report}")
+        rows = generate_general_report(conn, report)
+        for (users, small_group, role, is_joonjin, value) in rows:
+            print(f"{users}, {small_group}, {role}, {is_joonjin}, {value}")
+            
+
+if __name__ == '__main__':
+    main()
