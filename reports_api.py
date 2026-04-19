@@ -120,13 +120,16 @@ def generate_general_report(conn, report):
     on2_count = len(on2_arr)
     abs_count = len(abs_arr)
     pending_count = len(pending_arr)
-
+    present_count = ip1_count + on1_count + ip3_count + on2_count
+    total_count = present_count + abs_count + pending_count
+    percentage = (present_count / total_count * 100) if total_count > 0 else 0 
+    dot = '🟢' if pending_count == 0 else '🟡'
 
     ret = '''430000 (Day) - Alpha/Omega Report
 
-🟡/🟢 Education/Closing/Service/Workers
+{} Education/Closing/Service/Workers
     
-Part-Time Workers | # | # | %
+Part-Time Workers | {:02d} | {:02d} | {:02.1f}%
 
 {:02d} IP Live
 {:02d} ON Live
@@ -152,6 +155,10 @@ ___
 {:02d} Pending
 {}
     '''.format(
+        dot,
+        present_count,
+        total_count,
+        percentage,
         ip1_count,
         on1_count,
         ip3_count,
