@@ -159,10 +159,11 @@ def initialize_attendance_columns(conn, schema, table_name):
         for report in reports:
             cur.execute(
                 sql.SQL('ALTER TABLE {schema}.{table} ' \
-                'ADD COLUMN IF NOT EXISTS {col} TEXT REFERENCES att_opt(att)').format(
+                'ADD COLUMN IF NOT EXISTS {col} TEXT REFERENCES att_opt(att), ADD COLUMN {reason} TEXT').format(
                     schema=sql.Identifier(schema),
                     table=sql.Identifier(table_name),
                     col=sql.Identifier(f'{report}'),
+                    reason=sql.Identifier(f'{report} Reason')
                 )
             )
     conn.commit()

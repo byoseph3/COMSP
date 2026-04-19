@@ -89,7 +89,36 @@ def get_report_data(conn, report):
 
 def generate_general_report(conn, report):
     data = get_report_data(conn, report)
-    return data
+    ret = '''430000 (Day) - Alpha/Omega Report
+
+    🟡/🟢 Education/Closing/Service/Workers
+    
+    Part-Time Workers | # | # | %
+    
+    ## IP Live
+    ## ON Live
+    ## IP Makeup
+    ## ON Makeup
+    ___
+    
+    ## IP Live
+    NAMES
+    
+    ## ON Live
+    NAMES/REASON
+    
+    ## IP Makeup
+    NAMES/REASON
+    
+    ## ON Makeup
+    NAMES/REASON
+    
+    ## Absent
+    NAMES/REASON
+    ———————————————
+    '''
+    return ret
+
 
 def main():
     env = load_env()
