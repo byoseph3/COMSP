@@ -81,13 +81,13 @@ def make_connection_params(env):
 
 def get_report_data(conn, report):
     with conn.cursor() as cur:
-        cur.execute(sql.SQL('SELECT users, small_group, role, is_officer, {report}, {reason} FROM users').format(report=sql.Identifier(report), reason=sql.Identifier(f'{report} Reason')))
+        cur.execute(sql.SQL('SELECT users, small_group, role, is_officer, {report}, {reason} FROM users').format(report=sql.Identifier(report.get('name')), reason=sql.Identifier(f'{report.get('name')} Reason')))
         return cur.fetchall()
     #     columns = [desc[0] for desc in cur.description]
     #     rows = cur.fetchall()
     # return columns, rows
 
-def generate_general_report(conn, report):
+def generate_general_report(conn, report, ao, team):
     data = get_report_data(conn, report)
     ip1_arr = []
     on1_arr = []
@@ -95,6 +95,8 @@ def generate_general_report(conn, report):
     on2_arr = []
     abs_arr = []
     pending_arr = []
+    missing_small_groups_arr = []
+
     for (users, small_group, role, is_officer, value, reason) in data:
         if (reason and reason.lower() != 'none'):
             full_user_info = f"{users}/{reason}"
@@ -112,6 +114,8 @@ def generate_general_report(conn, report):
             abs_arr.append(full_user_info)
         else:
             pending_arr.append(full_user_info)
+            if small_group not in missing_small_groups_arr:
+                missing_small_groups_arr.append(small_group)
 
     # Logic for numbers (and some metadata farming)
     ip1_count = len(ip1_arr)
@@ -125,11 +129,11 @@ def generate_general_report(conn, report):
     percentage = (present_count / total_count * 100) if total_count > 0 else 0 
     dot = '🟢' if pending_count == 0 else '🟡'
 
-    ret = '''430000 (Day) - Alpha/Omega Report
+    ret = '''430000 ({}) - {} Report
 
-{} Education/Closing/Service/Workers
+{} {}
     
-Part-Time Workers | {:02d} | {:02d} | {:02.1f}%
+{} | {:02d} | {:02d} | {:02.1f}%
 
 {:02d} IP Live
 {:02d} ON Live
@@ -155,7 +159,11 @@ ___
 {:02d} Pending
 {}
     '''.format(
+        report.get('day'),
+        ao,
         dot,
+        report.get('type'),
+        team,
         present_count,
         total_count,
         percentage,
@@ -174,19 +182,56 @@ ___
         abs_count,
         '\n'.join(abs_arr) if abs_arr else '',
         pending_count,
-        '\n'.join(pending_arr) if pending_arr else ''
+        'Missing ' + '\nMissing '.join(missing_small_groups_arr) if missing_small_groups_arr else '',
+        # '\n'.join(pending_arr) if pending_arr else ''
     )
     return ret
 
+def update_user_field(conn, report_name, name, value, reason=None):
+    with conn.cursor() as cur:
+        if reason:
+            cur.execute(sql.SQL('UPDATE users SET {report} = {value}, {reason} = {reason_val} WHERE users = {name}').format(
+                report=sql.Identifier(report_name),
+                value=sql.Literal(value),
+                reason_val=sql.Literal(reason),
+                reason=sql.Identifier(f'{report_name} Reason'),
+                name=sql.Literal(name)
+            ))
+        else:
+            cur.execute(sql.SQL('UPDATE users SET {report} = {value} WHERE users = {name}').format(
+                report=sql.Identifier(report_name),
+                value=sql.Literal(value),
+                name=sql.Literal(name)
+            ))
+    conn.commit()
 
-def main():
-    env = load_env()
-    conn_params = make_connection_params(env)
-    with psycopg2.connect(**conn_params) as conn:
-        report = reports[0]
-        print(f"Generating report: {report}")
-        output = generate_general_report(conn, report)
-        print(output)
+def parse_args():
+    parser = argparse.ArgumentParser(description='Generate reports from the database.')
+    parser.add_argument('--env-file', type=str, help='Path to the environment file')
+    parser.add_argument('--report', type=str, help='Name of the report to generate')
+    parser.add_argument('--ao', type=str, help='Alpha/Omega designation for the report')
+    # parser.add_argument('--team', type=str, help='Team name for the report')
+    parser.add_argument('--u', type=str, help='Update a user\'s report status. Format: name=value[:reason]')
+    return parser.parse_args()
 
-if __name__ == '__main__':
-    main()
+# def main():
+#     args = parse_args()
+#     env = load_env()
+#     conn_params = make_connection_params(env)
+#     with psycopg2.connect(**conn_params) as conn:
+#         if args.u:
+#             # Parse the update argument
+#             name, value = args.u.split('=', 1)
+#             if ':' in value:
+#                 value, reason = value.split(':', 1)
+#             else:
+#                 reason = None
+#             update_user_field(conn, args.report, name, value, reason)
+#         else:
+#             report = reports.get(args.report)
+#             print(f"Generating report: {report.get('name')}")
+#             output = generate_general_report(conn, report, args.ao, env.get("TEAM"))
+#             print(output)
+
+# if __name__ == '__main__':
+#     main()
