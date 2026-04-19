@@ -81,7 +81,7 @@ def make_connection_params(env):
 
 def get_report_data(conn, report):
     with conn.cursor() as cur:
-        cur.execute(sql.SQL('SELECT users, small_group, role, is_joonjin, {report} FROM users').format(report=sql.Identifier(report)))
+        cur.execute(sql.SQL('SELECT users, small_group, role, is_officer, {report}, {reason} FROM users').format(report=sql.Identifier(report), reason=sql.Identifier(f'{report} Reason')))
         return cur.fetchall()
     #     columns = [desc[0] for desc in cur.description]
     #     rows = cur.fetchall()
@@ -89,34 +89,86 @@ def get_report_data(conn, report):
 
 def generate_general_report(conn, report):
     data = get_report_data(conn, report)
+    ip1_arr = []
+    on1_arr = []
+    ip3_arr = []
+    on2_arr = []
+    abs_arr = []
+    pending_arr = []
+    for (users, small_group, role, is_officer, value, reason) in data:
+        if (reason and reason.lower() != 'none'):
+            full_user_info = f"{users}/{reason}"
+        else:
+            full_user_info = users
+        if value == 'IP Live':
+            ip1_arr.append(full_user_info)
+        elif value == 'ON Live':
+            on1_arr.append(full_user_info)
+        elif value == 'IP Makeup':
+            ip3_arr.append(full_user_info)
+        elif value == 'ON Makeup':
+            on2_arr.append(full_user_info)
+        elif value == 'Absent':
+            abs_arr.append(full_user_info)
+        else:
+            pending_arr.append(full_user_info)
+
+    # Logic for numbers (and some metadata farming)
+    ip1_count = len(ip1_arr)
+    on1_count = len(on1_arr)
+    ip3_count = len(ip3_arr)
+    on2_count = len(on2_arr)
+    abs_count = len(abs_arr)
+    pending_count = len(pending_arr)
+
+
     ret = '''430000 (Day) - Alpha/Omega Report
 
-    🟡/🟢 Education/Closing/Service/Workers
+🟡/🟢 Education/Closing/Service/Workers
     
-    Part-Time Workers | # | # | %
+Part-Time Workers | # | # | %
+
+{:02d} IP Live
+{:02d} ON Live
+{:02d} IP Makeup
+{:02d} ON Makeup
+___
     
-    ## IP Live
-    ## ON Live
-    ## IP Makeup
-    ## ON Makeup
-    ___
+{:02d} IP Live
+{}
     
-    ## IP Live
-    NAMES
+{:02d} ON Live
+{}
     
-    ## ON Live
-    NAMES/REASON
+{:02d} IP Makeup
+{}
     
-    ## IP Makeup
-    NAMES/REASON
+{:02d} ON Makeup
+{}
     
-    ## ON Makeup
-    NAMES/REASON
-    
-    ## Absent
-    NAMES/REASON
-    ———————————————
-    '''
+{:02d} Absent
+{}
+———————————————
+{:02d} Pending
+{}
+    '''.format(
+        ip1_count,
+        on1_count,
+        ip3_count,
+        on2_count,
+        ip1_count,
+        '\n'.join(ip1_arr) if ip1_arr else '',
+        on1_count,
+        '\n'.join(on1_arr) if on1_arr else '',
+        ip3_count,
+        '\n'.join(ip3_arr) if ip3_arr else '',
+        on2_count,
+        '\n'.join(on2_arr) if on2_arr else '',
+        abs_count,
+        '\n'.join(abs_arr) if abs_arr else '',
+        pending_count,
+        '\n'.join(pending_arr) if pending_arr else ''
+    )
     return ret
 
 
@@ -126,10 +178,8 @@ def main():
     with psycopg2.connect(**conn_params) as conn:
         report = reports[0]
         print(f"Generating report: {report}")
-        rows = generate_general_report(conn, report)
-        for (users, small_group, role, is_joonjin, value) in rows:
-            print(f"{users}, {small_group}, {role}, {is_joonjin}, {value}")
-            
+        output = generate_general_report(conn, report)
+        print(output)
 
 if __name__ == '__main__':
     main()
