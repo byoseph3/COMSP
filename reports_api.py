@@ -87,6 +87,11 @@ def get_report_data(conn, report):
     #     rows = cur.fetchall()
     # return columns, rows
 
+def get_all_users(conn):
+    with conn.cursor() as cur:
+        cur.execute('SELECT users FROM users')
+        return [row[0] for row in cur.fetchall()]
+
 def generate_general_report(conn, report, ao, team):
     data = get_report_data(conn, report)
     ip1_arr = []
@@ -182,8 +187,8 @@ ___
         abs_count,
         '\n'.join(abs_arr) if abs_arr else '',
         pending_count,
-        'Missing ' + '\nMissing '.join(missing_small_groups_arr) if missing_small_groups_arr else '',
-        # '\n'.join(pending_arr) if pending_arr else ''
+        # 'Missing ' + '\nMissing '.join(missing_small_groups_arr) if missing_small_groups_arr else '',
+        '\n'.join(pending_arr) if pending_arr else ''
     )
     return ret
 
