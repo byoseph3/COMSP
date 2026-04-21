@@ -1,5 +1,6 @@
 import csv
 import re
+import argparse
 import json
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -150,11 +151,12 @@ def parse_individual_report(file_path):
     return result
 
 def request_with_reports_api(conn_params, request_type, env, api_params=None):
-    report, ao, name, value, reason, report_name = None, None, None, None, None, None
+    report, ao, name, value, reason, report_name, m_flag = None, None, None, None, None, None, False
     if api_params is not None:
         report = api_params.get('report')
         ao = api_params.get('ao')
         user = api_params.get('user')
+        m_flag = api_params.get('m_flag', False)
         if user is not None:
             name = user.get('user')
             value = user.get('value')
@@ -166,11 +168,30 @@ def request_with_reports_api(conn_params, request_type, env, api_params=None):
         if request_type == "users":
             return reports_api.get_all_users(conn)
         elif request_type == "report":
-            return reports_api.generate_general_report(conn, report, ao, env.get("TEAM"))
+            return reports_api.generate_general_report(conn, report, ao, env.get("TEAM"), m_flag)
         elif request_type == "update_user":
             return reports_api.update_user_field(conn, report_name, name, value, reason)
 
+def clear_all_reports():
+    env = load_env()
+    conn_params = make_connection_params(env)
+    with psycopg2.connect(**conn_params) as conn:
+        for report in reports:
+            reports_api.clear_all_reports(conn, report)
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Generate reports from the database.')
+    parser.add_argument('--c', action='store_true', help='Clear the database (reset for week)')
+    parser.add_argument('--m', action='store_true', help='Generate missing report with members instead of teams.')
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+    if args.c:
+            clear_all_reports()
+            print("Cleared all reports in the database.")
+            return
     env = load_env()
     print("Read Input")
     conn_params = make_connection_params(env)
@@ -218,6 +239,7 @@ def main():
         output = request_with_reports_api(conn_params, "report", env, {
             'report': reports[report],
             'ao': "Omega",
+            "m_flag": args.m
         })
         output_path = Path('secrets/outputs') / f"{reports[report]['name']}_Omega_.txt"
         with open(output_path, 'w', encoding='utf-8') as f:

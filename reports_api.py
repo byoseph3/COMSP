@@ -92,7 +92,7 @@ def get_all_users(conn):
         cur.execute('SELECT users FROM users')
         return [row[0] for row in cur.fetchall()]
 
-def generate_general_report(conn, report, ao, team):
+def generate_general_report(conn, report, ao, team, members=False):
     data = get_report_data(conn, report)
     ip1_arr = []
     on1_arr = []
@@ -161,7 +161,7 @@ ___
 {:02d} Absent
 {}
 ———————————————
-{:02d} Pending
+‼️ {:02d} Missing
 {}
     '''.format(
         report.get('day'),
@@ -187,8 +187,8 @@ ___
         abs_count,
         '\n'.join(abs_arr) if abs_arr else '',
         pending_count,
-        # 'Missing ' + '\nMissing '.join(missing_small_groups_arr) if missing_small_groups_arr else '',
-        '\n'.join(pending_arr) if pending_arr else ''
+        'Missing ' + '\nMissing '.join(missing_small_groups_arr) if missing_small_groups_arr else '',
+        #'\n'.join(pending_arr) if pending_arr else ''
     )
     return ret
 
@@ -208,6 +208,14 @@ def update_user_field(conn, report_name, name, value, reason=None):
                 value=sql.Literal(value),
                 name=sql.Literal(name)
             ))
+    conn.commit()
+
+def clear_all_reports(conn, report_name):
+    with conn.cursor() as cur:
+        cur.execute(sql.SQL('UPDATE users SET {report} = NULL, {reason} = NULL').format(
+            report=sql.Identifier(report_name),
+            reason=sql.Identifier(f'{report_name} Reason')
+        ))
     conn.commit()
 
 def parse_args():
