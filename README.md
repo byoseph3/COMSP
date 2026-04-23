@@ -1,6 +1,23 @@
 # COMSP
 Company Organization Management System Project
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (Following Documentation was an experimental Product of using Copilot to write Documentation on one script. Will Clean this up later.)
 # Postgres User Import Tool
 
