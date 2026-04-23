@@ -8,7 +8,7 @@ from urllib.parse import urlparse, parse_qs
 import psycopg2
 from psycopg2 import sql
 from openpyxl import load_workbook
-import reports_api
+import reports_api, spellchecker
 
 DEFAULT_ENV_PATHS = [Path('.') / '.env', Path('secrets') / '.env']
 
@@ -195,8 +195,7 @@ def main():
     env = load_env()
     print("Read Input")
     conn_params = make_connection_params(env)
-    # users = request_with_reports_api(conn_params, "users", env, {})
-
+    users = request_with_reports_api(conn_params, "users", env, {})
     #Read all files in inputs directory
     input_dir = Path('secrets/inputs')
     report_files = list(input_dir.glob('*.txt'))
@@ -224,7 +223,7 @@ def main():
             elif data == "Absent":
                 value = "ABS"
             for entry in report_data['groups'][data]:
-                name = entry['name']
+                name = spellchecker.guess_spelling(entry['name'], users)
                 reason = entry['reason']
                 api_user = {}
                 api_user['user'] = name
