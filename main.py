@@ -223,7 +223,7 @@ def main():
             elif data == "Absent":
                 value = "ABS"
             for entry in report_data['groups'][data]:
-                name = spellchecker.guess_spelling(entry['name'], users)
+                name = spellchecker.guess_spelling(entry['name'], users, 60)
                 reason = entry['reason']
                 api_user = {}
                 api_user['user'] = name

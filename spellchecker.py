@@ -108,7 +108,8 @@ def main():
         users = reports_api.get_all_users(conn)
     args = parse_args()
     if args.u:
-        guess_spelling(args.u, users)
+        guess = guess_spelling(args.u, users, 60)
+        print(f"Guessed Spelling for '{args.u}': '{guess}\n")
 
 if __name__ == "__main__":
     main()
