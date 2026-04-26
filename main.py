@@ -170,7 +170,7 @@ def request_with_reports_api(conn_params, request_type, env, api_params=None):
         elif request_type == "report":
             return reports_api.generate_general_report(conn, report, ao, env.get("TEAM"), m_flag)
         elif request_type == "update_user":
-            return reports_api.update_user_field(conn, report_name, name, value, reason)
+            return reports_api.update_user_field(conn, report_name, ao, name, value, reason)
 
 def clear_all_reports():
     env = load_env()
@@ -231,7 +231,13 @@ def main():
                 api_user['reason'] = reason
                 request_with_reports_api(conn_params, "update_user", env, {
                     'report': api_report,
-                    'user': api_user
+                    'user': api_user,
+                    'ao': "Alpha"
+                })
+                request_with_reports_api(conn_params, "update_user", env, {
+                    'report': api_report,
+                    'user': api_user,
+                    'ao': "Omega"
                 })
     # Write output of each report to an individual file
     for report in reports:

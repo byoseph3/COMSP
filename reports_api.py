@@ -191,19 +191,19 @@ ___
     )
     return ret
 
-def update_user_field(conn, report_name, name, value, reason=None):
+def update_user_field(conn, report_name, ao, name, value, reason=None):
     with conn.cursor() as cur:
         if reason:
             cur.execute(sql.SQL('UPDATE users SET {report} = {value}, {reason} = {reason_val} WHERE users = {name}').format(
-                report=sql.Identifier(report_name),
+                report=sql.Identifier(f'{report_name} {ao}'),
                 value=sql.Literal(value),
                 reason_val=sql.Literal(reason),
-                reason=sql.Identifier(f'{report_name} Reason'),
+                reason=sql.Identifier(f'{report_name} {ao} Reason'),
                 name=sql.Literal(name)
             ))
         else:
             cur.execute(sql.SQL('UPDATE users SET {report} = {value} WHERE users = {name}').format(
-                report=sql.Identifier(report_name),
+                report=sql.Identifier(f'{report_name} {ao}'),
                 value=sql.Literal(value),
                 name=sql.Literal(name)
             ))
@@ -212,8 +212,12 @@ def update_user_field(conn, report_name, name, value, reason=None):
 def clear_all_reports(conn, report_name):
     with conn.cursor() as cur:
         cur.execute(sql.SQL('UPDATE users SET {report} = NULL, {reason} = NULL').format(
-            report=sql.Identifier(report_name),
-            reason=sql.Identifier(f'{report_name} Reason')
+            report=sql.Identifier(f'{report_name} Alpha'),
+            reason=sql.Identifier(f'{report_name} Alpha Reason')
+        ))
+        cur.execute(sql.SQL('UPDATE users SET {report} = NULL, {reason} = NULL').format(
+            report=sql.Identifier(f'{report_name} Omega'),
+            reason=sql.Identifier(f'{report_name} Omega Reason')
         ))
     conn.commit()
 

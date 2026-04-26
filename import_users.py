@@ -164,7 +164,9 @@ def initialize_attendance_columns(conn, schema, table_name):
                     table=sql.Identifier(table_name),
                     col=sql.Identifier(f'{report} Alpha'),
                     reason=sql.Identifier(f'{report} Alpha Reason')
-                ),
+                )
+            )
+            cur.execute(
                 sql.SQL('ALTER TABLE {schema}.{table} ' \
                 'ADD COLUMN IF NOT EXISTS {col} TEXT REFERENCES att_opt(att), ADD COLUMN {reason} TEXT').format(
                     schema=sql.Identifier(schema),
