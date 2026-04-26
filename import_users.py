@@ -163,14 +163,14 @@ def initialize_attendance_columns(conn, schema, table_name):
                     schema=sql.Identifier(schema),
                     table=sql.Identifier(table_name),
                     col=sql.Identifier(f'{report} Alpha'),
-                    reason=sql.Identifier(f'{report} Reason')
+                    reason=sql.Identifier(f'{report} Alpha Reason')
                 ),
                 sql.SQL('ALTER TABLE {schema}.{table} ' \
                 'ADD COLUMN IF NOT EXISTS {col} TEXT REFERENCES att_opt(att), ADD COLUMN {reason} TEXT').format(
                     schema=sql.Identifier(schema),
                     table=sql.Identifier(table_name),
                     col=sql.Identifier(f'{report} Omega'),
-                    reason=sql.Identifier(f'{report} Reason')
+                    reason=sql.Identifier(f'{report} Omega Reason')
                 )
             )
     conn.commit()
