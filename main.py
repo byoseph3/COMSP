@@ -237,10 +237,18 @@ def main():
     for report in reports:
         output = request_with_reports_api(conn_params, "report", env, {
             'report': reports[report],
+            'ao': "Alpha",
+            "m_flag": args.m
+        })
+        output_path = Path('secrets/outputs') / f"{reports[report]['name']}_Alpha.txt"
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+        output = request_with_reports_api(conn_params, "report", env, {
+            'report': reports[report],
             'ao': "Omega",
             "m_flag": args.m
         })
-        output_path = Path('secrets/outputs') / f"{reports[report]['name']}_Omega_.txt"
+        output_path = Path('secrets/outputs') / f"{reports[report]['name']}_Omega.txt"
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(output)
 
