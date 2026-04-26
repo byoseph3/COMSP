@@ -110,6 +110,7 @@ def parse_individual_report(file_path):
     result = {
         "report_type": None, # Alpha Omega
         "class": None, # Sunday Morning Education
+        "ao": None, # Alpha or Omega
         "groups": {
             "IP Live": [], # Names and Reasons
             "ON Live": [],
@@ -208,6 +209,7 @@ def main():
 
         api_report = {}
         api_report['name'] = report_name
+        api_report['type'] = report_data.get("report_type")
         for data in report_data['groups']:
             # Determine if the name given is valid, or who the name might be referring to.
             # This is done via vector searching
@@ -232,12 +234,7 @@ def main():
                 request_with_reports_api(conn_params, "update_user", env, {
                     'report': api_report,
                     'user': api_user,
-                    'ao': "Alpha"
-                })
-                request_with_reports_api(conn_params, "update_user", env, {
-                    'report': api_report,
-                    'user': api_user,
-                    'ao': "Omega"
+                    'ao': report_data.get("report_type")
                 })
     # Write output of each report to an individual file
     for report in reports:
