@@ -209,6 +209,14 @@ def update_user_field(conn, report_name, ao, name, value, reason=None):
             ))
     conn.commit()
 
+def check_null_values(conn, report_name):
+    with conn.cursor() as cur:
+        cur.execute('SELECT DISTINCT small_group FROM users WHERE "{}" IS NULL'.format(report_name))
+        missing_groups = []
+        for row in cur.fetchall():
+            missing_groups.append(row[0])
+        return missing_groups
+
 def clear_all_reports(conn, report_name):
     with conn.cursor() as cur:
         cur.execute(sql.SQL('UPDATE users SET {report} = NULL, {reason} = NULL').format(

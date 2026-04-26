@@ -12,6 +12,7 @@ import reports_api, spellchecker
 
 DEFAULT_ENV_PATHS = [Path('.') / '.env', Path('secrets') / '.env']
 
+
 with open('secrets/reports_arr.json', 'r') as f:
     reports = json.load(f)['Reports']
 
@@ -184,6 +185,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Generate reports from the database.')
     parser.add_argument('--c', action='store_true', help='Clear the database (reset for week)')
     parser.add_argument('--m', action='store_true', help='Generate missing report with members instead of teams.')
+    parser.add_argument('--checknull', action='store_true', help='Check for null values in the database and print them out.')
     return parser.parse_args()
 
 
@@ -196,6 +198,26 @@ def main():
     env = load_env()
     print("Read Input")
     conn_params = make_connection_params(env)
+    if args.checknull:
+        with psycopg2.connect(**conn_params) as conn:
+            nullreports = []
+            for report in reports:
+                alpha_check = reports_api.check_null_values(conn, report + " Alpha")
+                omega_check = reports_api.check_null_values(conn, report + " Omega")
+                if alpha_check != []:
+                    alpha_string = report + " Alpha - "
+                    for group in alpha_check:
+                        alpha_string += f" {group}"
+                    nullreports.append(alpha_string)
+                if omega_check != []:
+                    omega_string = report + " Omega - "
+                    for group in omega_check:
+                        omega_string += f" {group}"
+                    nullreports.append(omega_string)
+            print("Reports with null values for Alpha or Omega:")
+            for r in nullreports:
+                print(f"- {r}")
+        return
     users = request_with_reports_api(conn_params, "users", env, {})
     #Read all files in inputs directory
     input_dir = Path('secrets/inputs')
