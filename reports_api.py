@@ -79,9 +79,9 @@ def make_connection_params(env):
 
     return params
 
-def get_report_data(conn, report):
+def get_report_data(conn, report, ao):
     with conn.cursor() as cur:
-        cur.execute(sql.SQL('SELECT users, small_group, role, is_officer, {report}, {reason} FROM users').format(report=sql.Identifier(report.get('name')), reason=sql.Identifier(f'{report.get('name')} Reason')))
+        cur.execute(sql.SQL('SELECT users, small_group, role, is_officer, {report}, {reason} FROM users').format(report=sql.Identifier(report.get('name') + f' {ao}'), reason=sql.Identifier(f'{report.get('name')} {ao} Reason')))
         return cur.fetchall()
     #     columns = [desc[0] for desc in cur.description]
     #     rows = cur.fetchall()
@@ -93,7 +93,7 @@ def get_all_users(conn):
         return [row[0] for row in cur.fetchall()]
 
 def generate_general_report(conn, report, ao, team, missing_members=False):
-    data = get_report_data(conn, report)
+    data = get_report_data(conn, report, ao)
     ip1_arr = []
     on1_arr = []
     ip3_arr = []
