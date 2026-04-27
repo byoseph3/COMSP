@@ -181,20 +181,31 @@ def clear_all_reports():
         for report in reports:
             reports_api.clear_all_reports(conn, report)
 
+def clear_all_input_files():
+    input_dir = Path('secrets/inputs')
+    report_files = list(input_dir.glob('*.txt'))
+    for file_path in report_files:
+        file_path.write('')
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate reports from the database.')
-    parser.add_argument('--c', action='store_true', help='Clear the database (reset for week)')
+    parser.add_argument('--cleardata', action='store_true', help='Clear the database (reset for week)')
     parser.add_argument('--m', action='store_true', help='Generate missing report with members instead of teams.')
-    parser.add_argument('--checknull', action='store_true', help='Check for null values in the database and print them out.')
+    parser.add_argument('--status', action='store_true', help='Check for null values in the database and print them out.')
+    parser.add_argument('--clearinput', action='store_true', help='Clear all input files.')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    if args.c:
+    if args.cleardata:
             clear_all_reports()
             print("Cleared all reports in the database.")
             return
+    if args.clearinput:
+        clear_all_input_files()
+        print("Cleared all input files.")
+        return
     env = load_env()
     print("Read Input")
     conn_params = make_connection_params(env)
