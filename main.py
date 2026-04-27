@@ -118,6 +118,7 @@ Name/Reason
 '''
 
 def parse_individual_report(file_path):
+    selector = "IP Live" # default for selector
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = [line.strip() for line in f.readlines() if line.strip()]
     
@@ -165,7 +166,7 @@ def parse_individual_report(file_path):
         if "/" in line:
             result["groups"][selector].append({
                 "name": line.split('/')[0].strip(),
-                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else None
+                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else ""
             })
     if result["report_type"] in predictors:
         for line in predictors[result["report_type"]]:
@@ -182,10 +183,9 @@ def parse_individual_report(file_path):
             if "/" in line:
                 result["groups"][selector].append({
                     "name": line.split('/')[0].strip(),
-                    "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else None
+                    "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else ""
                 })
 
-    selector = "IP Live"
     for line in lines:
         if "IP Live" in line:
             selector = "IP Live"
@@ -200,7 +200,7 @@ def parse_individual_report(file_path):
         if "/" in line:
             result["groups"][selector].append({
                 "name": line.split('/')[0].strip(),
-                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else ''
+                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else ""
             })
 
     return result
@@ -343,6 +343,8 @@ def main():
             for entry in report_data['groups'][data]:
                 name = spellchecker.guess_spelling(entry['name'], users, 60)
                 reason = entry['reason']
+                if name == "Grace Aradi De Leon":
+                    print(f'GADL: {reason if reason else "None Type"}')
                 api_user = {}
                 api_user['user'] = name
                 api_user['value'] = value
