@@ -1,0 +1,80 @@
+import csv
+import re
+import argparse
+import json
+from pathlib import Path
+from urllib.parse import urlparse, parse_qs
+
+import psycopg2
+from psycopg2 import sql
+from openpyxl import load_workbook
+import reports_api, spellchecker
+
+DEFAULT_ENV_PATHS = [Path('.') / '.env', Path('secrets') / '.env']
+
+
+with open('secrets/reports_arr.json', 'r') as f:
+    reports = json.load(f)['Reports']
+
+def parse_env_file(path):
+    values = {}
+    with path.open('r', encoding='utf-8') as file:
+        for line in file:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' not in line:
+                continue
+            key, value = line.split('=', 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            values[key] = value
+    return values
+
+def load_env(env_file=None):
+    if env_file:
+        path = Path(env_file)
+        if not path.exists():
+            raise FileNotFoundError(f"Environment file not found: {path}")
+        return parse_env_file(path)
+
+    for path in DEFAULT_ENV_PATHS:
+        if path.exists():
+            return parse_env_file(path)
+    return {}
+
+def parse_database_url(database_url):
+    result = urlparse(database_url)
+    user = result.username
+    password = result.password
+    host = result.hostname or 'localhost'
+    port = result.port or 5432
+    dbname = result.path.lstrip('/') if result.path else None
+    return {
+        'DB_USER': user,
+        'DB_PASSWORD': password,
+        'DB_HOST': host,
+        'DB_PORT': str(port),
+        'DB_NAME': dbname,
+    }
+
+def make_connection_params(env):
+    if 'DATABASE_URL' in env and env.get('DB_USER') is None:
+        env.update(parse_database_url(env['DATABASE_URL']))
+
+    params = {
+        'user': env.get('DB_USER'),
+        'password': env.get('DB_PASSWORD'),
+        'host': env.get('DB_HOST', 'localhost'),
+        'port': env.get('DB_PORT', '5432'),
+        'dbname': env.get('DB_NAME'),
+    }
+
+    missing = [k for k, v in params.items() if not v]
+    if missing:
+        raise ValueError(f"Missing database connection values: {', '.join(missing)}")
+
+    return params
+
+def read_stream():
+    pass

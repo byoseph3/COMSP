@@ -16,6 +16,19 @@ DEFAULT_ENV_PATHS = [Path('.') / '.env', Path('secrets') / '.env']
 with open('secrets/reports_arr.json', 'r') as f:
     reports = json.load(f)['Reports']
 
+predictors = {}
+predictor_dir = Path('secrets/predictors')
+predictor_files = list(predictor_dir.glob('*.txt'))
+for file_path in predictor_files:
+    predictor_entry = []
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f.readlines():
+            line = line.strip()
+            if line:
+                predictor_entry.append(line)
+    predictors[file_path.stem] = predictor_entry
+
+
 def parse_env_file(path):
     values = {}
     with path.open('r', encoding='utf-8') as file:
@@ -132,6 +145,46 @@ def parse_individual_report(file_path):
         result["class"] = class_match.group(1)
 
     print(result["class"])
+
+    # Added for predictors
+    # Check "all" predictor
+    # Check for predictor for report
+    # If predictor exists, add to groups
+    # Check predictor first so that any true entries will follow and overwrite predictor
+    for line in predictors["all"]:
+        if "IP Live" in line:
+            selector = "IP Live"
+        if "ON Live" in line:
+            selector = "ON Live"
+        if "IP Makeup" in line:
+            selector = "IP Makeup"
+        if "ON Makeup" in line:
+            selector = "ON Makeup"
+        if "Absent" in line:
+            selector = "Absent"
+        if "/" in line:
+            result["groups"][selector].append({
+                "name": line.split('/')[0].strip(),
+                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else None
+            })
+    if result["report_type"] in predictors:
+        for line in predictors[result["report_type"]]:
+            if "IP Live" in line:
+                selector = "IP Live"
+            if "ON Live" in line:
+                selector = "ON Live"
+            if "IP Makeup" in line:
+                selector = "IP Makeup"
+            if "ON Makeup" in line:
+                selector = "ON Makeup"
+            if "Absent" in line:
+                selector = "Absent"
+            if "/" in line:
+                result["groups"][selector].append({
+                    "name": line.split('/')[0].strip(),
+                    "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else None
+                })
+
     selector = "IP Live"
     for line in lines:
         if "IP Live" in line:
@@ -147,7 +200,7 @@ def parse_individual_report(file_path):
         if "/" in line:
             result["groups"][selector].append({
                 "name": line.split('/')[0].strip(),
-                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else None
+                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else ''
             })
 
     return result
@@ -196,8 +249,28 @@ def parse_args():
     parser.add_argument('--m', action='store_true', help='Generate missing report with members instead of teams.')
     parser.add_argument('--status', action='store_true', help='Check for null values in the database and print them out.')
     parser.add_argument('--clearinput', action='store_true', help='Clear all input files.')
+    parser.add_argument('--out', action='store_true', help='Runs output only.')
     return parser.parse_args()
 
+def write_out(conn_params, args, env):
+    # Write output of each report to an individual file
+    for report in reports:
+        output = request_with_reports_api(conn_params, "report", env, {
+            'report': reports[report],
+            'ao': "Alpha",
+            "m_flag": args.m
+        })
+        output_path = Path('secrets/outputs') / f"{reports[report]['name']}_Alpha.txt"
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+        output = request_with_reports_api(conn_params, "report", env, {
+            'report': reports[report],
+            'ao': "Omega",
+            "m_flag": args.m
+        })
+        output_path = Path('secrets/outputs') / f"{reports[report]['name']}_Omega.txt"
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(output)
 
 def main():
     args = parse_args()
@@ -210,9 +283,8 @@ def main():
         print("Cleared all input files.")
         return
     env = load_env()
-    print("Read Input")
     conn_params = make_connection_params(env)
-    if args.checknull:
+    if args.status:
         with psycopg2.connect(**conn_params) as conn:
             nullreports = []
             for report in reports:
@@ -232,12 +304,20 @@ def main():
             for r in nullreports:
                 print(f"- {r}")
         return
+    if args.out:
+        write_out(conn_params, args, env)
+        return
     users = request_with_reports_api(conn_params, "users", env, {})
     #Read all files in inputs directory
+    print("Read Input")
     input_dir = Path('secrets/inputs')
     report_files = list(input_dir.glob('*.txt'))
 
     for file_path in report_files:
+        # Skip empty files
+        if file_path.stat().st_size == 0:
+            print(f"Skipping empty file: {file_path.name}")
+            continue
         report_data = parse_individual_report(file_path)
         print(f"Processing {file_path.name}:")
         report_name = report_data.get("class")
@@ -273,23 +353,7 @@ def main():
                     'ao': report_data.get("report_type")
                 })
     # Write output of each report to an individual file
-    for report in reports:
-        output = request_with_reports_api(conn_params, "report", env, {
-            'report': reports[report],
-            'ao': "Alpha",
-            "m_flag": args.m
-        })
-        output_path = Path('secrets/outputs') / f"{reports[report]['name']}_Alpha.txt"
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(output)
-        output = request_with_reports_api(conn_params, "report", env, {
-            'report': reports[report],
-            'ao': "Omega",
-            "m_flag": args.m
-        })
-        output_path = Path('secrets/outputs') / f"{reports[report]['name']}_Omega.txt"
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(output)
+    write_out(conn_params, args, env)
 
 if __name__ == "__main__":
     main()
