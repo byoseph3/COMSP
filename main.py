@@ -182,10 +182,13 @@ def clear_all_reports():
             reports_api.clear_all_reports(conn, report)
 
 def clear_all_input_files():
+    # Copy all files from a base input directory to the secrets/inputs directory, overwriting any existing files. The base input directory is 'base_inputs' and should have the same file names as the secrets/inputs directory.
+    base_input_dir = Path('secrets/base_inputs')
     input_dir = Path('secrets/inputs')
-    report_files = list(input_dir.glob('*.txt'))
-    for file_path in report_files:
-        file_path.write('')
+    for file_path in base_input_dir.glob('*.txt'):
+        target_path = input_dir / file_path.name
+        with open(file_path, 'r', encoding='utf-8') as src, open(target_path, 'w', encoding='utf-8') as dst:
+            dst.write(src.read())
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate reports from the database.')
