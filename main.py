@@ -166,7 +166,7 @@ def parse_individual_report(file_path):
         if "/" in line:
             result["groups"][selector].append({
                 "name": line.split('/')[0].strip(),
-                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else ""
+                "reason": line.split('/')[1].strip()
             })
     if result["report_type"] in predictors:
         for line in predictors[result["report_type"]]:
@@ -183,7 +183,7 @@ def parse_individual_report(file_path):
             if "/" in line:
                 result["groups"][selector].append({
                     "name": line.split('/')[0].strip(),
-                    "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else ""
+                    "reason": line.split('/')[1].strip()
                 })
 
     for line in lines:
@@ -200,7 +200,7 @@ def parse_individual_report(file_path):
         if "/" in line:
             result["groups"][selector].append({
                 "name": line.split('/')[0].strip(),
-                "reason": line.split('/')[1].strip() if line.split('/')[1].strip() else ""
+                "reason": line.split('/')[1].strip()
             })
 
     return result

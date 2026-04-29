@@ -194,7 +194,7 @@ ___
 def update_user_field(conn, report_name, ao, name, value, reason=None):
     with conn.cursor() as cur:
         if reason:
-            cur.execute(sql.SQL('UPDATE users SET {report} = {value}, {reason} = {reason_val} WHERE users = {name}').format(
+            cur.execute(sql.SQL('UPDATE users u SET {report} = {value}, {reason} = {reason_val} WHERE u.users = {name}').format(
                 report=sql.Identifier(f'{report_name} {ao}'),
                 value=sql.Literal(value),
                 reason_val=sql.Literal(reason),
@@ -202,9 +202,10 @@ def update_user_field(conn, report_name, ao, name, value, reason=None):
                 name=sql.Literal(name)
             ))
         else:
-            cur.execute(sql.SQL('UPDATE users SET {report} = {value} WHERE users = {name}').format(
+            cur.execute(sql.SQL('UPDATE users u SET {report} = {value}, {reason} = NULL WHERE u.users = {name}').format(
                 report=sql.Identifier(f'{report_name} {ao}'),
                 value=sql.Literal(value),
+                reason=sql.Identifier(f'{report_name} {ao} Reason'),
                 name=sql.Literal(name)
             ))
     conn.commit()
