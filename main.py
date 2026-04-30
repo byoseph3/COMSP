@@ -343,8 +343,6 @@ def main():
             for entry in report_data['groups'][data]:
                 name = spellchecker.guess_spelling(entry['name'], users, 60)
                 reason = entry['reason']
-                if name == "Grace Aradi De Leon":
-                    print(f'GADL: {reason if reason else "None Type"}')
                 api_user = {}
                 api_user['user'] = name
                 api_user['value'] = value
