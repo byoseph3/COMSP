@@ -159,7 +159,7 @@ def initialize_attendance_columns(conn, schema, table_name):
         for report in reports:
             cur.execute(
                 sql.SQL('ALTER TABLE {schema}.{table} ' \
-                'ADD COLUMN IF NOT EXISTS {col} TEXT REFERENCES att_opt(att), ADD COLUMN {reason} TEXT').format(
+                'ADD COLUMN IF NOT EXISTS {col} TEXT REFERENCES att_opt(att), ADD COLUMN IF NOT EXISTS {reason} TEXT').format(
                     schema=sql.Identifier(schema),
                     table=sql.Identifier(table_name),
                     col=sql.Identifier(f'{report} Alpha'),
@@ -168,13 +168,22 @@ def initialize_attendance_columns(conn, schema, table_name):
             )
             cur.execute(
                 sql.SQL('ALTER TABLE {schema}.{table} ' \
-                'ADD COLUMN IF NOT EXISTS {col} TEXT REFERENCES att_opt(att), ADD COLUMN {reason} TEXT').format(
+                'ADD COLUMN IF NOT EXISTS {col} TEXT REFERENCES att_opt(att), ADD COLUMN IF NOT EXISTS {reason} TEXT').format(
                     schema=sql.Identifier(schema),
                     table=sql.Identifier(table_name),
                     col=sql.Identifier(f'{report} Omega'),
                     reason=sql.Identifier(f'{report} Omega Reason')
                 )
             )
+        cur.execute(
+            sql.SQL('ALTER TABLE {schema}.{table} ' \
+            'ADD COLUMN IF NOT EXISTS {wed_alpha_time} SMALLINT, ADD COLUMN IF NOT EXISTS {wed_omega_time} SMALLINT').format(
+                schema=sql.Identifier(schema),
+                table=sql.Identifier(table_name),
+                wed_alpha_time=sql.Identifier('Wednesday Alpha Time'),
+                wed_omega_time=sql.Identifier('Wednesday Omega Time')
+            )
+        )
     conn.commit()
 
 def insert_rows(conn, schema, table_name, columns, rows):

@@ -294,7 +294,7 @@ def main():
                     alpha_string = report + " Alpha - "
                     for group in alpha_check:
                         alpha_string += f" {group}"
-                    nullreports.append(alpha_string)
+                    # nullreports.append(alpha_string)
                 if omega_check != []:
                     omega_string = report + " Omega - "
                     for group in omega_check:

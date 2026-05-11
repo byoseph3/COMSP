@@ -148,16 +148,12 @@ ___
     
 {:02d} IP Live
 {}
-    
 {:02d} ON Live
 {}
-    
 {:02d} IP Makeup
 {}
-    
 {:02d} ON Makeup
 {}
-    
 {:02d} Absent
 {}
 ———————————————
@@ -177,15 +173,15 @@ ___
         ip3_count,
         on2_count,
         ip1_count,
-        '\n'.join(ip1_arr) if ip1_arr else '',
+        '\n'.join(ip1_arr)+ '\n' if ip1_arr else '',
         on1_count,
-        '\n'.join(on1_arr) if on1_arr else '',
+        '\n'.join(on1_arr)+ '\n' if on1_arr else '',
         ip3_count,
-        '\n'.join(ip3_arr) if ip3_arr else '',
+        '\n'.join(ip3_arr)+ '\n' if ip3_arr else '',
         on2_count,
-        '\n'.join(on2_arr) if on2_arr else '',
+        '\n'.join(on2_arr)+ '\n' if on2_arr else '',
         abs_count,
-        '\n'.join(abs_arr) if abs_arr else '',
+        '\n'.join(abs_arr)+ '\n' if abs_arr else '',
         pending_count,
         ('Missing ' + '\nMissing '.join(missing_small_groups_arr) if missing_small_groups_arr else '') if not missing_members else ('\n'.join(pending_arr) if pending_arr else '')
     )
