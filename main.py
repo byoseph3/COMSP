@@ -152,6 +152,7 @@ def parse_individual_report(file_path):
     # Check for predictor for report
     # If predictor exists, add to groups
     # Check predictor first so that any true entries will follow and overwrite predictor
+    prediction_selector_mapping = {}
     for line in predictors["all"]:
         if "IP Live" in line:
             selector = "IP Live"
@@ -164,10 +165,13 @@ def parse_individual_report(file_path):
         if "Absent" in line:
             selector = "Absent"
         if "/" in line:
+            prediction_selector_mapping[line.split('/')[0].strip()] = selector
             result["groups"][selector].append({
                 "name": line.split('/')[0].strip(),
                 "reason": line.split('/')[1].strip()
             })
+    
+    # 2nd passthrough for specific predictors
     if result["report_type"] in predictors:
         for line in predictors[result["report_type"]]:
             if "IP Live" in line:
@@ -181,6 +185,16 @@ def parse_individual_report(file_path):
             if "Absent" in line:
                 selector = "Absent"
             if "/" in line:
+                if prediction_selector_mapping.get(line.split('/')[0].strip()) is not None:
+                    prediction_selector = prediction_selector_mapping[line.split('/')[0].strip()]
+                    if {
+                        "name": line.split('/')[0].strip(),
+                        "reason": line.split('/')[1].strip()
+                    } in result["groups"][prediction_selector]:
+                        result["groups"][prediction_selector].remove({
+                            "name": line.split('/')[0].strip(),
+                            "reason": line.split('/')[1].strip()
+                        })
                 result["groups"][selector].append({
                     "name": line.split('/')[0].strip(),
                     "reason": line.split('/')[1].strip()
@@ -198,6 +212,16 @@ def parse_individual_report(file_path):
         if "Absent" in line:
             selector = "Absent"
         if "/" in line:
+            if prediction_selector_mapping.get(line.split('/')[0].strip()) is not None:
+                    prediction_selector = prediction_selector_mapping[line.split('/')[0].strip()]
+                    if {
+                        "name": line.split('/')[0].strip(),
+                        "reason": line.split('/')[1].strip()
+                    } in result["groups"][prediction_selector]:
+                        result["groups"][prediction_selector].remove({
+                            "name": line.split('/')[0].strip(),
+                            "reason": line.split('/')[1].strip()
+                        })
             result["groups"][selector].append({
                 "name": line.split('/')[0].strip(),
                 "reason": line.split('/')[1].strip()
