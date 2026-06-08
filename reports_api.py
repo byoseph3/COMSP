@@ -187,6 +187,106 @@ ___
     )
     return ret
 
+
+def generate_weekly_report(conn, report, ao, team, missing_members=False):
+    report_info_table = []
+    # Collect data from some of the reports of my choosing, and then retrieve a set of data that I can later format by looping.
+
+    # Figure out how to make an abstract for loop. Maybe have a list of report names and then loop through them, storing the data in a dictionary or something? That way I can easily add/remove reports from the weekly report without changing much code.
+    data = get_report_data(conn, report, ao)
+    ip_arr = []
+    on_arr = []
+    makeup_arr = []
+    abs_arr = []
+    pending_arr = []
+    missing_small_groups_arr = []
+
+    for (users, small_group, role, is_officer, value, reason) in data:
+        if (reason and reason.lower() != 'none'):
+            full_user_info = f"{users}/{reason}"
+        else:
+            full_user_info = users
+        if value == 'IP1':
+            ip_arr.append(full_user_info)
+        elif value == 'ON':
+            on_arr.append(full_user_info)
+        elif value == 'IP3' or value == 'ON2':
+            makeup_arr.append(full_user_info)
+        elif value == 'ABS':
+            abs_arr.append(full_user_info)
+        else:
+            pending_arr.append(full_user_info)
+            if small_group not in missing_small_groups_arr:
+                missing_small_groups_arr.append(small_group)
+
+    # Logic for numbers (and some metadata farming)
+    ip_count = len(ip_arr)
+    on_count = len(on_arr)
+    makeup_count = len(makeup_arr)
+    abs_count = len(abs_arr)
+    pending_count = len(pending_arr)
+    present_count = ip_count + on_count + makeup_count
+    total_count = present_count + abs_count + pending_count
+    percentage = (present_count / total_count * 100) if total_count > 0 else 0 
+
+    ret = '''Morning Education Attendance
+00/00-00/00 (F-Th)
+
+Team Total - {:02d}
+
+Friday - {:02d}/{:02d} = {:02.1f}%
+{:02d} - Online Live
+{:02d} - IP Live
+{:02d} - Video Makeup
+{:02d} - Live Makeup
+
+Saturday (Workers) - {:02d}/{:02d} = {:02.1f}%
+{:02d} - Online Live
+{:02d}  - IP Live
+{:02d} - Video Makeup
+{:02d} - Live Makeup
+
+Saturday (All CM) - {:02d}/{:02d} = {:02.1f}%
+{:02d} - Online Live
+{:02d} - IP Live
+{:02d} - Video Makeup
+{:02d} - Live Makeup
+
+Sunday - {:02d}/{:02d} = {:02.1f}%
+{:02d} - Online Live
+{:02d} - IP Live
+{:02d} - Video Makeup
+{:02d} - Live Makeup
+
+Monday - {:02d}/{:02d} = {:02.1f}%
+{:02d} - Online Live
+{:02d} - IP Live
+{:02d} - Video Makeup
+{:02d} - Live Makeup
+
+Tuesday - {:02d}/{:02d} = {:02.1f}%
+{:02d} - Online Live
+{:02d} - IP Live
+{:02d} - Video Makeup
+{:02d} - Live Makeup
+
+Thursday GY Edu - {:02d}/{:02d} = {:02.1f}%
+{:02d} - Online Live
+{:02d} - IP Live
+{:02d} - Video Makeup
+{:02d} - Live Makeup
+
+Thursday - {:02d}/{:02d} = {:02.1f}%
+{:02d} - Online Live
+{:02d} - IP Live
+{:02d} - Video Makeup
+{:02d} - Live Makeup
+
+'''.format(
+    total_count,
+
+)
+
 def update_user_field(conn, report_name, ao, name, value, reason=None):
     with conn.cursor() as cur:
         if reason:

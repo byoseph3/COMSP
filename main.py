@@ -251,6 +251,9 @@ def request_with_reports_api(conn_params, request_type, env, api_params=None):
         elif request_type == "update_user":
             return reports_api.update_user_field(conn, report_name, ao, name, value, reason)
 
+def generate_weekly_report():
+    pass
+
 def clear_all_reports():
     env = load_env()
     conn_params = make_connection_params(env)
